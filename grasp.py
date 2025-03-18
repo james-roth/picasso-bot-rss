@@ -13,20 +13,31 @@ def main():
             gripper_name='gripper',
         )
 
-    bot.gripper.set_pressure(0.5)
-    # robot_startup()
+    # starts up the robot, leave 
+    bot.gripper.set_pressure(0.25)
+    robot_startup()
+
+
+    # some sample moving code
+    bot.arm.go_to_home_pose()
+    print("At home position")
+    time.sleep(2)
+
+    print("Moving -0.4 in X dir")
+    print(bot.arm.set_ee_cartesian_trajectory(x=-0.4))
+    print("Moved")
+    # bot.arm.set_ee_pose_components(x=0.3)
+    time.sleep(10)
 
     # bot.gripper.release()
     # bot.gripper.grasp()
 
-    # time.sleep(10)
     # bot.gripper.release()
 
-
-    # # bot.arm.go_to_home_pose()
-    # bot.arm.go_to_sleep_pose()
-
-    # robot_shutdown()
+    # shutdown code, leave in
+    print("going to sleep")
+    bot.arm.go_to_sleep_pose()
+    robot_shutdown()
 
 if __name__ == '__main__':
     main()
