@@ -23,16 +23,13 @@ def main():
     print("At home position")
     time.sleep(2)
 
-    print("Moving -0.4 in X dir")
-    print(bot.arm.set_ee_cartesian_trajectory(x=-0.4))
-    print("Moved")
+    print(bot.arm.set_ee_cartesian_trajectory(z=-0.15))
+    print("moved in the z direction")
+
+    print(bot.arm.set_ee_cartesian_trajectory(x=-0.05))
+    print("moved in the x direction")
     # bot.arm.set_ee_pose_components(x=0.3)
-    time.sleep(10)
-
-    # bot.gripper.release()
-    # bot.gripper.grasp()
-
-    # bot.gripper.release()
+    time.sleep(2)
 
     # shutdown code, leave in
     print("going to sleep")
