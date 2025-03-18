@@ -13,20 +13,21 @@ def main():
             gripper_name='gripper',
         )
 
-    bot.gripper.set_pressure(0.5)
-    # robot_startup()
+    print(bot.arm.group_info)
+    robot_startup()
+    bot.gripper.set_pressure(2.0)
+    bot.gripper.release()
+    bot.gripper.grasp()
 
-    # bot.gripper.release()
-    # bot.gripper.grasp()
+    print("Trying to adjust the cartesian end effector")
+    bot.arm.set_single_joint_position(joint_name='wrist_angle', position=-np.pi/8)
+    bot.arm.set_single_joint_position(joint_name='elbow', position=-np.pi/4.0)
+    bot.arm.set_single_joint_position(joint_name='waist', position=np.pi/12)
+    bot.arm.set_single_joint_position(joint_name='waist', position=-np.pi/12)
+    print("Done operation")
+    bot.arm.go_to_sleep_pose()
 
-    # time.sleep(10)
-    # bot.gripper.release()
-
-
-    # # bot.arm.go_to_home_pose()
-    # bot.arm.go_to_sleep_pose()
-
-    # robot_shutdown()
+    robot_shutdown()
 
 if __name__ == '__main__':
     main()
