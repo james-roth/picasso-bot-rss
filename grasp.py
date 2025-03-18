@@ -26,7 +26,11 @@ def main():
     print("Testing Marker/Pencil")
     bot.arm.set_single_joint_position(joint_name='waist', position=np.pi/12)
     bot.arm.set_single_joint_position(joint_name='waist', position=-np.pi/12)
+    print("Done Testing")
+    print("Draw Line")
+    bot.arm.set_ee_cartesian_trajectory(x=0.05)
     print("Done operation")
+    bot.arm.go_to_home_pose()
     bot.arm.go_to_sleep_pose()
 
     robot_shutdown()
