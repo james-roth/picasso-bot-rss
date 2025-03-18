@@ -15,6 +15,11 @@ def main():
 
     print(bot.arm.group_info)
     robot_startup()
+
+    #give some time to place the pen in
+    bot.gripper.release()
+    time.sleep(4.0)
+
     bot.gripper.set_pressure(2.0)
     bot.gripper.release()
     bot.gripper.grasp()
@@ -27,11 +32,14 @@ def main():
     bot.arm.set_single_joint_position(joint_name='waist', position=np.pi/12)
     bot.arm.set_single_joint_position(joint_name='waist', position=-np.pi/12)
     print("Done Testing")
-    print("Draw Line")
-    bot.arm.set_ee_cartesian_trajectory(x=0.05)
+    #print("Draw Line")
+    #bot.arm.set_ee_cartesian_trajectory(x=0.05, moving_time=2.0)
     print("Done operation")
     bot.arm.go_to_home_pose()
     bot.arm.go_to_sleep_pose()
+
+    #release the pen
+    bot.gripper.release()
 
     robot_shutdown()
 
