@@ -14,22 +14,25 @@ def main():
             group_name='arm',
             gripper_name='gripper',
         )
+    
     SLEEP_TIME = 3.0
     # print(bot.arm.group_info)
     robot_startup()
     bot.arm.go_to_home_pose()
     time.sleep(SLEEP_TIME)
     print("Went to home pose")
+
     # move the robot down to make contact with the paper
-    bot.arm.set_ee_cartesian_trajectory(z=-0.15, x=-0.05)
+    bot.arm.set_ee_cartesian_trajectory(z=-0.15)
     time.sleep(SLEEP_TIME)
     print("Moved robot end effector downwards")
 
+    # get the robot's current x, y, z for the end effector, to calculate a move
     cur_xyz = np.array(bot.arm.get_ee_pose())[:-1, -1].T
     print(f'Current robot pose: {cur_xyz}')
     time.sleep(SLEEP_TIME)
 
-    # points to move the robot from (pt A to B)
+    # generate points to move the robot from (pt A to B) as absolute positions
     transformation_xyz = np.array([0.15, 0, 0])
     point_a = cur_xyz
     point_b = cur_xyz + transformation_xyz
@@ -40,7 +43,6 @@ def main():
     x_points = np.linspace(point_a[0], point_b[0], num=num_waypoints)
     y_points = np.linspace(point_a[1], point_b[1], num=num_waypoints)
 
- 
 
     WAYPOINT_SLEEP_TIME = 0.4
     # set a faster moving time
@@ -56,8 +58,10 @@ def main():
     time.sleep(SLEEP_TIME)
     print("Done with attempted moves, shutting down")
 
+    bot.arm.set_trajectory_time(2)
     print("Going to home pose")
     bot.arm.go_to_home_pose()
+    time.sleep(SLEEP_TIME)
     print("Going to sleep pose")
     bot.arm.go_to_sleep_pose()
     time.sleep(1)
