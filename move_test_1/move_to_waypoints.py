@@ -27,7 +27,13 @@ def main():
         if absolute:
             success = bot.arm.set_ee_pose_components(**kwargs)
         else:
-            success = bot.arm.set_ee_cartesian_trajectory(**kwargs)
+            #doing this to the trajectory as we only want a singular waypoint (strict path planning)
+            move_time=1.0 #seconds
+            success = bot.arm.set_ee_cartesian_trajectory(moving_time=move_time,
+                wp_moving_time=move_time,
+                wp_accel_time=(move_time/2),
+                wp_period=move_time,
+                **kwargs)
 
         if success:
             method = "absolute pose" if absolute else "relative trajectory"
@@ -58,13 +64,25 @@ def main():
     print(waypoints)
     for segment in waypoints:
         x0, y0, x1, y1 = segment
-        move(x=x1, z=.1, y=y1, absolute=True)
-        move(x=x0, z=.1, y=y0, absolute=True)
+
+        num_waypoints = 5 #(min 2)amnt of waypoints we manually generate
+        x_points = np.linspace(x0, x1, num=num_waypoints)
+        y_points = np.linspace(y0, y1, num=num_waypoints)
+
+        #x0y0->x1y1
+        for x, y in zip(x_points, y_points):
+            #can change blocking=True if time between planning/sending next command have low deltas
+            move(x=x, z=.1, y=y, blocking=False, absolute=True)
+
+        #x1y1->x0y0
+        for x, y in zip(x_points[::-1], y_points[::-1]):
+            move(x=x, z=.1, y=y, blocking=False, absolute=True)
 
     bot.arm.go_to_home_pose()
     time.sleep(2)
     print("going to sleep")
     bot.arm.go_to_sleep_pose()
+    time.sleep(2) #just so we avoid the "cannot destroy destroyable" error
     robot_shutdown()
 
 if __name__ == '__main__':
