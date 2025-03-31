@@ -45,6 +45,40 @@ def main():
         time.sleep(sleep_time)
         print("Sleep done")
     
+    
+    def compute_adjustments(x, y):
+        """
+        Compute the y and z adjustments based on the position in the xy-plane.
+
+        Args:
+        x (float): The x coordinate.
+        y (float): The y coordinate.
+
+        Returns:
+            tuple: Adjusted (y, z)
+        """
+        # Scaling factors
+        k_y = 0.01  # Influence of y on z
+        k_x = 0.005  # Influence of x on y
+
+        # Reference min/max values
+        y_min, y_max = -0.1, 0.1
+        x_min, x_max = 0.2, 0.35
+
+        # Compute normalized factors (range -1 to 1)
+        y_factor = (y - y_min) / (y_max - y_min) * 2 - 1                
+        # Maps y in [-0.1, 0.1] to [-1, 1]
+        x_factor = (x - x_min) / (x_max - x_min) * 2 - 1  
+        # Maps x in [0.2, 0.35] to [-1, 1]
+
+        # Compute z adjustment based on y movement
+        z_adjustment = k_y * y_factor
+
+        # Compute y adjustment based on x movement (higher at min/max x)
+        y_adjustment = k_x * (1 - abs(x_factor))  # Maximum boost near x_min/x_max
+
+        return y_adjustment, z_adjustment
+    
     # starts up the robot, leave 
     bot.gripper.set_pressure(2.0)
     robot_startup()
@@ -72,11 +106,13 @@ def main():
         #x0y0->x1y1
         for x, y in zip(x_points, y_points):
             #can change blocking=True if time between planning/sending next command have low deltas
-            move(x=x, z=.1, y=y, blocking=False, absolute=True)
+            y_adjust, z_adjust = compute_adjustments(x, y)
+            move(x=x, z=.1 + z_adjust, y=y + y_adjust, blocking=False, absolute=True)
 
         #x1y1->x0y0
         for x, y in zip(x_points[::-1], y_points[::-1]):
-            move(x=x, z=.1, y=y, blocking=False, absolute=True)
+            y_adjust, z_adjust = compute_adjustments(x, y)
+            move(x=x, z=.1 + z_adjust, y=y + y_adjust, blocking=False, absolute=True)
 
     bot.arm.go_to_home_pose()
     time.sleep(2)
