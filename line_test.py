@@ -33,9 +33,9 @@ def main():
     time.sleep(SLEEP_TIME)
 
     # generate points to move the robot from (pt A to B) as absolute positions
-    transformation_xyz = np.array([0.15, 0, 0])
+    translation_xyz = np.array([0.15, 0, 0])
     point_a = cur_xyz
-    point_b = cur_xyz + transformation_xyz
+    point_b = cur_xyz + translation_xyz
 
     print("Starting line movement calculations")
     # calculate waypoints to move the robot between
@@ -43,17 +43,18 @@ def main():
     x_points = np.linspace(point_a[0], point_b[0], num=num_waypoints)
     y_points = np.linspace(point_a[1], point_b[1], num=num_waypoints)
 
-
     WAYPOINT_SLEEP_TIME = 0.4
     # set a faster moving time
-    bot.arm.set_trajectory_time(0.4)
+    # bot.arm.set_trajectory_time(0.4)
 
-    print(f"Starting move with {num_waypoints} waypoints, sleep time between waypoints: {WAYPOINT_SLEEP_TIME}")
-    # Actually move the bot, 0y0->x1y1
-    for x, y in zip(x_points, y_points):
-        success = bot.arm.set_ee_pose_components(x=x, z=.1, y=y, blocking=False)
-        print(f"Waypoint moving status: {success[1]}")
-        time.sleep(WAYPOINT_SLEEP_TIME)
+    print(bot.arm.set_ee_cartesian_trajectory(translation_xyz[0], translation_xyz[1], translation_xyz[2], moving_time=0.5))
+
+    # print(f"Starting move with {num_waypoints} waypoints, sleep time between waypoints: {WAYPOINT_SLEEP_TIME}")
+    # # Actually move the bot, 0y0->x1y1
+    # for x, y in zip(x_points, y_points):
+    #     success = bot.arm.set_ee_pose_components(x=x, z=.1, y=y, blocking=False)
+    #     print(f"Waypoint moving status: {success[1]}")
+    #     time.sleep(WAYPOINT_SLEEP_TIME)
     
     time.sleep(SLEEP_TIME)
     print("Done with attempted moves, shutting down")
