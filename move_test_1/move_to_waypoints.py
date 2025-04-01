@@ -8,10 +8,10 @@ from scale_points import load_waypoints
 
 def main():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
-            robot_model='px150',
+            robot_model='rx200',
             group_name='arm',
             gripper_name='gripper',
-        )
+        ) # 5 dof
 
     sleep_time = 5
     
@@ -48,37 +48,42 @@ def main():
     
     def compute_adjustments(x, y):
         """
-        Compute the y and z adjustments based on the position in the xy-plane.
+        Compute the x adjustments based on the position in the xy-plane. Smoothing based on
+        the natural curvature of the robot while making a change in the y-axis.
 
         Args:
         x (float): The x coordinate.
         y (float): The y coordinate.
 
         Returns:
-            tuple: Adjusted (y, z)
+            tuple: Adjustment in the x-axis
         """
-        # Scaling factors
-        k_z = 0.03  # Influence of y on z
-        k_x = 0.02  # Influence of x on y
+        # Scaling factor
+        k_x = 0.02
 
-        # Reference min/max values
+        # Y-axis min/max values (given a standard piece of paper)
         y_min, y_max = -0.1, 0.1
-        x_min, x_max = 0.2, 0.35
-
-        # Compute normalized factors (range -1 to 1)
-        y_factor = (y - y_min) / (y_max - y_min) * 2 - 1                
-        # Maps y in [-0.1, 0.1] to [-1, 1]
-        x_factor = (x - x_min) / (x_max - x_min)  
-        # Maps x in [0.2, 0.35] to [0, 1]
-
-        # Compute z adjustment based on y movement
-        z_adjustment = k_z * (1 - x_factor)
+        y_factor = (y - y_min) / (y_max - y_min) * 2 - 1  # Maps y in [-0.1, 0.1] to [-1, 1]
 
         # Compute y adjustment based on x movement (higher at min/max x)
         x_adjustment = -k_x * (1 - abs(y_factor))  # Maximum boost near x_min/x_max
 
-        return x_adjustment, z_adjustment
+        return x_adjustment
     
+    def is_horizontal(x0, x1):
+        """
+        Determines if the line is a horizontal 
+        or less than 3% change on the x-axis based on the robot coords
+
+        Args:
+        x0 - initial x value in the line
+        x1 - last x value in the line
+
+        Returns:
+        True if horizontal otherwise False
+        """
+        return abs(x1 - x0) < 0.03  
+
     # starts up the robot, leave 
     bot.gripper.set_pressure(2.0)
     robot_startup()
@@ -86,38 +91,43 @@ def main():
     # some sample moving code
     bot.arm.go_to_home_pose()
     time.sleep(2)
-    print("At home position")
+    print("At home pose")
 
     bot.gripper.release()
-    print('put marker in the gripper')
-    time.sleep(10)
+    print('Put marker in the gripper')
+    time.sleep(4)
     bot.gripper.grasp()
     time.sleep(2)
 
     waypoints = load_waypoints()
     print(waypoints)
+    z_const = 0.1
 
     for segment in waypoints:
         x0, y0, x1, y1 = segment
         # Move to initial point on the line
-        move(x=x1, z=.1, y=y1, blocking=False, absolute=True)
+        move(x=x1, z=z_const, y=y1, blocking=False, absolute=True)
         print(f"Moved to initial point: {x1, y1}")
 
-        num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
-        x_points = np.linspace(x0, x1, num=num_waypoints)
-        y_points = np.linspace(y0, y1, num=num_waypoints)
+        if is_horizontal(x0, x1):
+            print("Found Horizontal Line")
+            num_waypoints = 5 #(min 2)amnt of waypoints we manually generate
+            x_points = np.linspace(x0, x1, num=num_waypoints)
+            y_points = np.linspace(y0, y1, num=num_waypoints)
 
-        # Interate through intermediate waypoints
-        for x, y in zip(x_points[9::-1], y_points[9::-1]):
-            x_adjust, z_adjust = compute_adjustments(x, y)
-            print(f"Waypoint: {x+x_adjust,.1+z_adjust,y}")
-            move(x=x + x_adjust, z=.1 + z_adjust, y=y, blocking=False, absolute=True)
+            # Interate through intermediate waypoints
+            for x, y in zip(x_points[9::-1], y_points[9::-1]):
+                x_adjust = compute_adjustments(x, y)
+                print(f"Waypoint: {x+x_adjust,y, z_const}")
+                move(x=x + x_adjust, z=z_const, y=y, blocking=False, absolute=True)
+            print(f"Moved to end point: {x0, y0}")
+        else:
+            # TODO: Add the code for a normal move between points
+            move(x=x0, z=z_const, y=y1, blocking=False, absolute=True)
 
-        move(x=x0, z=.1, y=y0, blocking=False, absolute=True)
-        print(f"Moved to end point: {x0, y0}")
     bot.arm.go_to_home_pose()
     time.sleep(2)
-    print("going to sleep")
+    print("Going to sleep pose")
     bot.arm.go_to_sleep_pose()
     time.sleep(2) #just so we avoid the "cannot destroy destroyable" error
     robot_shutdown()
