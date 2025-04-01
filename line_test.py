@@ -111,11 +111,11 @@ def main2():
     # print(bot.arm.group_info)
     robot_startup()
     bot.arm.set_trajectory_time(1.5)
-    bot.gripper.set_pressure(0.7)
+    bot.gripper.set_pressure(1.0)
     
 
     bot.arm.go_to_home_pose()
-    bot.arm.set_ee_cartesian_trajectory(z=-0.2, y=-0.1)
+    bot.arm.set_ee_cartesian_trajectory(z=-0.235) # other gripper at a height of like z=-0.18
     # bot.arm.set_ee_pose_components(x=0.3, blocking=True)
     time.sleep(SLEEP_TIME)
     print("Went to home pose")
@@ -128,7 +128,9 @@ def main2():
     # this function is "the best", but it still has a million problems, inlcuding but not limited to:
     # - it still can only keep a semi-consistent z-level and thus is a pretty shitty drawer
     # - our arm does not have enough DOF to let it move in the y direction with this function, thanks interbotix very cool
-    bot.arm.set_ee_cartesian_trajectory(-0.20, 0, 0, moving_time=1, wp_accel_time=0.25)
+    # z = -0.014
+    z= 0
+    bot.arm.set_ee_cartesian_trajectory(-0.15, 0, z, moving_time=1, wp_accel_time=0.25)
     time.sleep(6)
     print(f"Ending position: {get_bot_coords(bot)}")
 
@@ -142,8 +144,8 @@ def main2():
     # print(f"Ending position: {get_bot_coords(bot)}")
 
     bot.arm.set_trajectory_time(2)
-    bot.arm.go_to_sleep_pose(blocking=True)
     bot.gripper.release()
+    bot.arm.go_to_sleep_pose(blocking=True)
     time.sleep(SLEEP_TIME)
     robot_shutdown()
 
