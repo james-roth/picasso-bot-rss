@@ -55,7 +55,7 @@ def move_to_target(bot, start_pos, target_pos, roll=0, pitch=0, duration=2.0):
 
 def main():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
-            robot_model='px150',
+            robot_model='rx200',
             group_name='arm',
             gripper_name='gripper',
         )
