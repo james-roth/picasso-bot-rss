@@ -80,7 +80,7 @@ def main():
         return x_adjustment, z_adjustment
     
     # starts up the robot, leave 
-    bot.gripper.set_pressure(2.0)
+    bot.gripper.set_pressure(1.0)
     robot_startup()
 
     # some sample moving code
@@ -90,7 +90,7 @@ def main():
 
     bot.gripper.release()
     print('put marker in the gripper')
-    time.sleep(10)
+    time.sleep(3)
     bot.gripper.grasp()
     time.sleep(2)
 
@@ -107,7 +107,7 @@ def main():
         x_points = np.linspace(x0, x1, num=num_waypoints)
         y_points = np.linspace(y0, y1, num=num_waypoints)
         
-        z_const = 0.07  # Still skipping some points (need to figure out this z constant val)
+        z_const = 0.1  # Still skipping some points (need to figure out this z constant val)
 
         # Interate through intermediate waypoints
         for x, y in zip(x_points[9::-1], y_points[9::-1]):
@@ -125,6 +125,7 @@ def main():
     bot.arm.go_to_home_pose()
     time.sleep(2)
     print("going to sleep")
+    bot.gripper.release()
     bot.arm.go_to_sleep_pose()
     time.sleep(2) #just so we avoid the "cannot destroy destroyable" error
     robot_shutdown()
