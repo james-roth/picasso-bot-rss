@@ -8,7 +8,7 @@ from scale_points import load_waypoints
 
 def main():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
-            robot_model='rx200',
+            robot_model='px150',
             group_name='arm',
             gripper_name='gripper',
         )
@@ -38,7 +38,7 @@ def main():
         if success:
             method = "absolute pose" if absolute else "relative trajectory"
             desc = ", ".join([f"{k}={v}" for k, v in kwargs.items()])
-            print(f"Moved using {method}: {desc}")
+            # print(f"Moved using {method}: {desc}")
         else:
             print(f"Failed to move with args: {kwargs}")
 
@@ -58,24 +58,24 @@ def main():
             tuple: Adjusted (y, z)
         """
         # Scaling factors
-        k_y = 0.01  # Influence of y on z
-        k_x = 0.01  # Influence of x on y
+        k_z = 0.03  # Influence of y on z
+        k_x = 0.02  # Influence of x on y
 
         # Reference min/max values
         y_min, y_max = -0.1, 0.1
-        x_min, x_max = 0.35, .2
+        x_min, x_max = 0.2, 0.35
 
         # Compute normalized factors (range -1 to 1)
-        y_factor = (y - y_min) / (y_max - y_min) * 2 - 1  
+        y_factor = (y - y_min) / (y_max - y_min) * 2 - 1                
         # Maps y in [-0.1, 0.1] to [-1, 1]
-        x_factor = (x - x_min) / (x_max - x_min) * 2 - 1  
-        # Maps x in [0.2, 0.35] to [-1, 1]
+        x_factor = (x - x_min) / (x_max - x_min)  
+        # Maps x in [0.2, 0.35] to [0, 1]
 
         # Compute z adjustment based on y movement
-        z_adjustment = k_x * x_factor
+        z_adjustment = k_z * (1 - x_factor)
 
         # Compute y adjustment based on x movement (higher at min/max x)
-        x_adjustment = k_y * (1 - abs(y_factor))  # Maximum boost near x_min/x_max
+        x_adjustment = -k_x * (1 - abs(y_factor))  # Maximum boost near x_min/x_max
 
         return x_adjustment, z_adjustment
     
@@ -88,45 +88,33 @@ def main():
     time.sleep(2)
     print("At home position")
 
-    # bot.gripper.release()
-    # print('put marker in the gripper')
-    # time.sleep(3)
-    # bot.gripper.grasp()
-    # time.sleep(2)
+    bot.gripper.release()
+    print('put marker in the gripper')
+    time.sleep(10)
+    bot.gripper.grasp()
+    time.sleep(2)
 
     waypoints = load_waypoints()
     print(waypoints)
+
     for segment in waypoints:
-        bot.arm.go_to_home_pose()
-        time.sleep(2)
-
         x0, y0, x1, y1 = segment
+        # Move to initial point on the line
+        move(x=x1, z=.1, y=y1, blocking=False, absolute=True)
+        print(f"Moved to initial point: {x1, y1}")
 
-        # x_adjust, z_adjust = compute_adjustments(x1, y1)
-        # move(x=x1 + x_adjust, y=y1, z=.1 + z_adjust, absolute=True)
-        # x_adjust, z_adjust = compute_adjustments(x0, y0)
-        # move(x=x0 + x_adjust, y=y0, z=.1 + z_adjust, absolute=True)
-
-        move(x=x1, y=y1, z=.1, absolute=True)
-
-        # move(x=x0, y=y0, z=.1, absolute=True)
-
-
-        num_waypoints = 5 #(min 2)amnt of waypoints we manually generate
+        num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
         x_points = np.linspace(x0, x1, num=num_waypoints)
         y_points = np.linspace(y0, y1, num=num_waypoints)
 
-        #x0y0->x1y1
-        # for x, y in zip(x_points, y_points):
-        #     #can change blocking=True if time between planning/sending next command have low deltas
-        #     y_adjust, z_adjust = compute_adjustments(x, y)
-        #     move(x=x, z=.1 + z_adjust, y=y + y_adjust, blocking=False, absolute=True)
-
-        # x1y1->x0y0
-        for x, y in zip(x_points[::-1], y_points[::-1]):
+        # Interate through intermediate waypoints
+        for x, y in zip(x_points[9::-1], y_points[9::-1]):
             x_adjust, z_adjust = compute_adjustments(x, y)
-            move(x=x + x_adjust, y=y, z=.1 + z_adjust, absolute=True, blocking=False)
+            print(f"Waypoint: {x+x_adjust,.1+z_adjust,y}")
+            move(x=x + x_adjust, z=.1 + z_adjust, y=y, blocking=False, absolute=True)
 
+        move(x=x0, z=.1, y=y0, blocking=False, absolute=True)
+        print(f"Moved to end point: {x0, y0}")
     bot.arm.go_to_home_pose()
     time.sleep(2)
     print("going to sleep")
