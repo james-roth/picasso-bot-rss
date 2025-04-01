@@ -101,7 +101,7 @@ def main():
         x0, y0, x1, y1 = segment
         # Move to initial point on the line
         move(x=x1, z=.1, y=y1, blocking=False, absolute=True)
-        print(f"Moved to initial point: {x1, y1}")
+        print(f"Moved to initial point:{x1, y1}")
 
         num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
         x_points = np.linspace(x0, x1, num=num_waypoints)
