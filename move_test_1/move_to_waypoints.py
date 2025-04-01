@@ -116,7 +116,7 @@ def main():
             y_points = np.linspace(y0, y1, num=num_waypoints)
 
             # Interate through intermediate waypoints
-            for x, y in zip(x_points[9::-1], y_points[9::-1]):
+            for x, y in zip(x_points[num_waypoints - 1::-1], y_points[num_waypoints - 1::-1]):
                 x_adjust = compute_adjustments(x, y)
                 print(f"Waypoint: {x+x_adjust,y, z_const}")
                 move(x=x + x_adjust, z=z_const, y=y, blocking=False, absolute=True)
