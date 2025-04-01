@@ -39,6 +39,7 @@ def main():
     # get the robot's current x, y, z for the end effector, to calculate a move
     cur_xyz = get_bot_coords(bot)
     time.sleep(SLEEP_TIME)
+    always_z = cur_xyz[2]
 
     # generate points to move the robot from (pt A to B) as absolute positions
     translation_xyz = np.array([-0.15, 0, 0])

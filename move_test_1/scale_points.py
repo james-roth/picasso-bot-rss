@@ -1,6 +1,6 @@
 
-x_min_robot = .2
-x_max_robot = .35
+x_min_robot = .35
+x_max_robot = .2
 x_min_draw = 0
 x_max_draw = 850
 

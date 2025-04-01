@@ -51,7 +51,7 @@ Then change to this directory and type:
 
 def main():
     bot = InterbotixManipulatorXS(
-        robot_model='px150',
+        robot_model='rx200',
         group_name='arm',
         gripper_name='gripper',
     )
