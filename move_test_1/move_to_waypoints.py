@@ -8,7 +8,7 @@ from scale_points import load_waypoints
 
 def main():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
-            robot_model='px150',
+            robot_model='rx200',
             group_name='arm',
             gripper_name='gripper',
         )
@@ -103,17 +103,24 @@ def main():
         move(x=x1, z=.1, y=y1, blocking=False, absolute=True)
         print(f"Moved to initial point:{x1, y1}")
 
-        num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
+        num_waypoints = 5 #(min 2)amnt of waypoints we manually generate
         x_points = np.linspace(x0, x1, num=num_waypoints)
         y_points = np.linspace(y0, y1, num=num_waypoints)
+        
+        z_const = 0.07  # Still skipping some points (need to figure out this z constant val)
 
         # Interate through intermediate waypoints
         for x, y in zip(x_points[9::-1], y_points[9::-1]):
             x_adjust, z_adjust = compute_adjustments(x, y)
             print(f"Waypoint: {x+x_adjust,.1+z_adjust,y}")
-            move(x=x + x_adjust, z=.1 + z_adjust, y=y, blocking=False, absolute=True)
 
-        move(x=x0, z=.1, y=y0, blocking=False, absolute=True)
+            if (abs(x1 - x0) < 0.003):
+                print("Horizontal Line")
+                move(x=x + x_adjust, z=z_const, y=y, blocking=False, absolute=True)
+            else:
+                print("Vertical Line")
+                move(x=x, z=z_const + z_adjust, y=y, blocking=False, absolute=True)
+                
         print(f"Moved to end point: {x0, y0}")
     bot.arm.go_to_home_pose()
     time.sleep(2)
