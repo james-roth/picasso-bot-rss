@@ -41,7 +41,7 @@ bot.arm.set_ee_pose_components(LEFT_PAPER_CORNER_ABS[0] + PAPER_HEIGHT , LEFT_PA
 time.sleep(SLEEP_TIME)
 
 # top right corner
-print(f"Going to top right corner of the paper: {LEFT_PAPER_CORNER_ABS[0] - PAPER_HEIGHT , LEFT_PAPER_CORNER_ABS[1] + PAPER_WIDTH, PLACE_PAPER_HOVER}")
+print(f"Going to top right corner of the paper: {LEFT_PAPER_CORNER_ABS[0] + PAPER_HEIGHT , LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH, PLACE_PAPER_HOVER}")
 bot.arm.set_ee_pose_components(LEFT_PAPER_CORNER_ABS[0] + PAPER_HEIGHT , LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH, PLACE_PAPER_HOVER)
 time.sleep(SLEEP_TIME)
 

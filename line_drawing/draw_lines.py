@@ -15,7 +15,7 @@ from move_to_waypoints import is_horizontal, compute_adjustments
 # Paper values:
 PAPER_WIDTH = 0.29
 PAPER_HEIGHT = 0.19
-# The corner of the paper w.r.t the robot's base frame.
+# The BOTTOM left corner of the paper w.r.t the robot's base frame.
 LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
 
 # The distance above the paper to hover before pusing the pen down
@@ -68,6 +68,22 @@ def lift_pen(robot: InterbotixManipulatorXS) -> bool:
 
     return success
 
+def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
+    """
+    Converts coordinates for lines from the robot's "normal" x, y coordinate system
+    to the one used by the robot's drawing functions so that coordinates on the paper are drawn
+    in the correct orientation by the robot.
+
+    Currently, swaps the X and Y values as well.
+    """
+    # TODO: we could also (and maybe should) do this via a transfomation matrix? But I'm lazy
+    robot_coords_lines = []
+    for line in lines:
+        new_line = [line[1], line[0], line[3], line[2]]
+        robot_coords_lines.append(new_line)
+
+    return robot_coords_lines
+
 
 def draw_lines():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
@@ -92,6 +108,9 @@ def draw_lines():
 
     # get a list of lines to draw, in absolute coordinates w.r.t to the robot's base frame
     # each line is of the form [x0, y0, x1, y1] where the line starts at x0, y0, and ends at x1, y1
+
+    # NOTE: These points are in the PAPER'S coordinate frame where 
+    # x is the width of the paper and y is the height of the paper
     lines = load_waypoints(
         x_min_robot=LEFT_PAPER_CORNER_ABS[0],
         x_max_robot=LEFT_PAPER_CORNER_ABS[0] + PAPER_HEIGHT,
@@ -99,9 +118,27 @@ def draw_lines():
         y_max_robot=LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH,
     )
     print("Loaded lines to draw")
+    # converts the lines into the robot's coordinate frame, where 
+    # negative X goes away from the robot in a straight line, and
+    # positive Y is to the left of the robot and negative Y is to the right of the robot
+    """  
+    In the ROBOT's coordinate frame:
+
+            - X
+            
+      + Y   Paper  - Y
+            here     
+    
+            ROBOT
+    
+            + X
+    """ 
+    # lines = convert_to_robot_coords(lines)
+    print("Converted lines in paper's coordinate frame to the robot's coordinate frame")
 
     # actually draw each line
     for line in lines:
+        # These lines are in the coordiante frame of the robot
         start = np.array([line[0], line[1], LEFT_PAPER_CORNER_ABS[2]])
         end = np.array([line[2], line[3], LEFT_PAPER_CORNER_ABS[2]])
 
@@ -115,13 +152,13 @@ def draw_lines():
         actual_z = pen_to_paper(bot, LEFT_PAPER_CORNER_ABS)[1]
 
         # move to the end of the line
-        if is_horizontal(start[0], end[0]):
+        if is_horizontal(start[1], end[1]):
             x0, x1 = start[0], end[0]
             y0, y1 = start[1], end[1]
 
             # do waypoints
             print("Found Horizontal Line")
-            num_waypoints = 5 #(min 2)amnt of waypoints we manually generate
+            num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
             x_points = np.linspace(x0, x1, num=num_waypoints)
             y_points = np.linspace(y0, y1, num=num_waypoints)
 
@@ -129,7 +166,11 @@ def draw_lines():
             for x, y in zip(x_points[1:], y_points[1:]):
                 x_adjust = compute_adjustments(y, y_max=LEFT_PAPER_CORNER_ABS[1], y_min=LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH)
                 print(f"Waypoint: {x + x_adjust, y, actual_z}")
-                if not bot.arm.set_ee_pose_components(x=x + x_adjust, y=y, z=actual_z, blocking=False, moving_time=TRAJECTORY_TIME/num_waypoints, accel_time=ACCEL_TIME)[1]:
+                if not bot.arm.set_ee_pose_components(
+                        x=x + x_adjust, y=y, z=actual_z, 
+                        blocking=False, moving_time=TRAJECTORY_TIME/num_waypoints, accel_time=ACCEL_TIME, 
+                        custom_guess=bot.arm.get_joint_positions()
+                    )[1]:
                     # if one waypoint fails, don't execute more
                     print(f"Waypoint {list(x_points).index(x) - 1} failed, skipping rest")
                     break
@@ -138,7 +179,11 @@ def draw_lines():
         else:
             # move to the second point on the line
             print(f"Moving to the second point on the line: {end[0], end[1], actual_z}")
-            success = bot.arm.set_ee_pose_components(end[0], end[1], actual_z, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME)[1]
+            success = bot.arm.set_ee_pose_components(
+                    x=end[0], y=end[1], z=actual_z, 
+                    moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME,
+                    custom_guess=bot.arm.get_joint_positions()
+                )[1]
             if success:
                 time.sleep(SLEEP_TIME)
     
