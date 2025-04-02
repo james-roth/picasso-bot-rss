@@ -24,7 +24,7 @@ PAPER_HOVER = 0.15
 # Robot values:
 GRIPPER_PRESSURE = 1.0
 SLEEP_TIME = 3.0
-TRAJECTORY_TIME = 1.0
+TRAJECTORY_TIME = 1.2
 ACCEL_TIME = TRAJECTORY_TIME/5
 
 # Other:
@@ -46,7 +46,7 @@ def pen_to_paper(robot: InterbotixManipulatorXS, paper_coords: np.ndarray) -> tu
     """
     Puts the robot's pen down onto the paper at the current x, y location of the end effector.
     """
-
+    robot.arm.set_trajectory_time(TRAJECTORY_TIME)
     cur_xyz = get_eff_coords(robot)
     print(f"Moving the pen down to the paper at coords: {cur_xyz[0], cur_xyz[1], paper_coords[2] + PEN_DISPLACEMENT}")
     success = robot.arm.set_ee_pose_components(cur_xyz[0], cur_xyz[1], paper_coords[2] + PEN_DISPLACEMENT)[1]
@@ -59,6 +59,7 @@ def lift_pen(robot: InterbotixManipulatorXS) -> bool:
     """
     Lifts the robot's end effector PAPER_HOVER distance above the paper it is drawing on.
     """
+    robot.arm.set_trajectory_time(TRAJECTORY_TIME)
     cur_xyz = get_eff_coords(robot)
     print(f"Attempting to lift the pen up to: {cur_xyz[0], cur_xyz[1], LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER}")
     success = robot.arm.set_ee_pose_components(cur_xyz[0], cur_xyz[1], LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER)[1]
@@ -125,10 +126,14 @@ def draw_lines():
             y_points = np.linspace(y0, y1, num=num_waypoints)
 
             # Interate through intermediate waypoints
-            for x, y in zip(x_points[num_waypoints - 1::-1], y_points[num_waypoints - 1::-1]):
+            for x, y in zip(x_points[1:], y_points[1:]):
                 x_adjust = compute_adjustments(y, y_max=LEFT_PAPER_CORNER_ABS[1], y_min=LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH)
                 print(f"Waypoint: {x + x_adjust, y, actual_z}")
-                bot.arm.set_ee_pose_components(x=x + x_adjust, z=actual_z, y=y, blocking=False, moving_time=TRAJECTORY_TIME/num_waypoints, accel_time=ACCEL_TIME/num_waypoints)
+                if not bot.arm.set_ee_pose_components(x=x + x_adjust, y=y, z=actual_z, blocking=False, moving_time=TRAJECTORY_TIME/num_waypoints, accel_time=ACCEL_TIME)[1]:
+                    # if one waypoint fails, don't execute more
+                    print(f"Waypoint {list(x_points).index(x) - 1} failed, skipping rest")
+                    break
+                time.sleep(SLEEP_TIME/num_waypoints)
             print(f"Moved to end point: {x0, y0}")
         else:
             # move to the second point on the line
@@ -141,6 +146,7 @@ def draw_lines():
         lift_pen(bot)
 
     # clean up after drawing lines
+    bot.arm.set_trajectory_time(TRAJECTORY_TIME)
     print("Stopping up and going home")
     bot.arm.go_to_home_pose()
     time.sleep(SLEEP_TIME)
