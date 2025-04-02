@@ -27,7 +27,7 @@ def load_waypoints(x_min_robot, x_max_robot, y_min_robot, y_max_robot, filename=
 
     scaled_waypoints = []
     for segment in waypoints:
-        y0, x0, y1, x1 = segment
+        x0, y0, x1, y1 = segment
         x_start_scaled = ((x0 * x_range) / x_max_draw) + x_min_robot
         y_start_scaled = ((y0 * y_range) / y_max_draw) + y_min_robot
         x_end_scaled = ((x1 * x_range) / x_max_draw) + x_min_robot

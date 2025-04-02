@@ -16,7 +16,7 @@ from move_to_waypoints import is_horizontal, compute_adjustments
 PAPER_WIDTH = 0.29
 PAPER_HEIGHT = 0.19
 # The corner of the paper w.r.t the robot's base frame.
-LEFT_PAPER_CORNER_ABS = np.array([0.2, 0.14, 0.05])
+LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
 
 # The distance above the paper to hover before pusing the pen down
 PAPER_HOVER = 0.15
