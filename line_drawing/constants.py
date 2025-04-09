@@ -15,7 +15,7 @@ PEN_DISPLACEMENT = 0.015
 # ensure the pen is always a certain distance above the paper
 PAPER_HOVER = round(0.135 + PEN_DISPLACEMENT, 4)
 # The BOTTOM left corner of the paper w.r.t the robot's base frame.
-LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.325, 0.05])
+LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
 PAPER_WIDTH = 0.30
 PAPER_HEIGHT = 0.18
 
