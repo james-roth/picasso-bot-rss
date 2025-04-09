@@ -143,7 +143,7 @@ def draw_lines():
         actual_z = pen_to_paper(bot, LEFT_PAPER_CORNER_ABS)[1]
 
         # move to the end of the line
-        if is_horizontal(start[1], end[1]):
+        if is_horizontal(start[0], end[0]):
             # do waypoints
             print("Found Horizontal Line")
             num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
