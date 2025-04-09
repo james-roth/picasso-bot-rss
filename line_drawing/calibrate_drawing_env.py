@@ -25,7 +25,6 @@ bot.arm.set_trajectory_time(1.5)
 
 # go to the default home pose
 bot.arm.go_to_home_pose()
-CALIBRATION_SLEEP_TIME = 2.0
 time.sleep(CALIBRATION_SLEEP_TIME)
 
 paper_coords = [

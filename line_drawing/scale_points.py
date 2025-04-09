@@ -113,10 +113,10 @@ def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
             y0, x0, y1, x1 = paper_point
 
             # Convert to robot's coordinate frame, POINTS ARE ALREADY SCALED TO ROBOT'S FRAME
-            x0 = LEFT_PAPER_CORNER_ABS[0] + x0
-            y0 = LEFT_PAPER_CORNER_ABS[1] - y0
-            x1 = LEFT_PAPER_CORNER_ABS[0] + x1
-            y1 = LEFT_PAPER_CORNER_ABS[1] - y1
+            x0 = round(LEFT_PAPER_CORNER_ABS[0] + x0, 2)
+            y0 = round(LEFT_PAPER_CORNER_ABS[1] - y0, 2)
+            x1 = round(LEFT_PAPER_CORNER_ABS[0] + x1, 2)
+            y1 = round(LEFT_PAPER_CORNER_ABS[1] - y1, 2)
 
             new_lines.append([x0, y0, x1, y1])
         # for 2D points, we need to convert them to 3D points by adding the z coordinate
@@ -129,7 +129,7 @@ def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
             x0 = LEFT_PAPER_CORNER_ABS[0] + x0
             y0 = LEFT_PAPER_CORNER_ABS[1] - y0
 
-            new_lines.append([x0, y0])
+            new_lines.append([round(x0, 2), round(y0, 2)])
 
     return new_lines
 

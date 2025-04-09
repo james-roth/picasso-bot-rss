@@ -10,18 +10,16 @@ x_max_draw = CANVAS_WIDTH
 y_min_draw = 0
 y_max_draw = CANVAS_HEIGHT
 
-
 ### PHYSICAL PAPER VALUES:
 PEN_DISPLACEMENT = 0.015
 # ensure the pen is always a certain distance above the paper
-PAPER_HOVER = int(0.135 + PEN_DISPLACEMENT)
+PAPER_HOVER = round(0.135 + PEN_DISPLACEMENT, 4)
 # The BOTTOM left corner of the paper w.r.t the robot's base frame.
-LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
-PAPER_WIDTH = 0.29
-PAPER_HEIGHT = 0.19
+LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.325, 0.05])
+PAPER_WIDTH = 0.30
+PAPER_HEIGHT = 0.18
 
 ### ROBOT VALUES:
-
 # Robot arm values:
 GRIPPER_PRESSURE = 1.0
 TRAJECTORY_TIME = 1.2
