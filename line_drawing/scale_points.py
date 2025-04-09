@@ -123,7 +123,7 @@ def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
         elif len(paper_point) == 2:
             # swap the points as the x axis of the robot is the y axis of the paper, and vice versa
             # ie. (x, y) in paper coords = (y, x) in robot coords
-            y0, x0, y1, x1 = paper_point
+            y0, x0 = paper_point
 
             # Convert to robot's coordinate frame, POINTS ARE ALREADY SCALED TO ROBOT'S FRAME
             x0 = LEFT_PAPER_CORNER_ABS[0] + x0
