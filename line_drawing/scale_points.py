@@ -1,21 +1,26 @@
-from straight_line import CANVAS_WIDTH, CANVAS_HEIGHT
 import numpy as np
 
-# The BOTTOM left corner of the paper is (0, 0)
-# The TOP right corner of the paper is (CANVAS_WIDTH, CANVAS_HEIGHT)
-x_min_draw = 0
-x_max_draw = CANVAS_WIDTH
-y_min_draw = 0
-y_max_draw = CANVAS_HEIGHT
-# Paper values:
-PAPER_WIDTH = 0.29
-PAPER_HEIGHT = 0.19
-# The BOTTOM left corner of the paper w.r.t the robot's base frame.
-LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
-# not a good place for these constants but the easiest way to resolve import issues for now
-PEN_DISPLACEMENT = 0.015
-PAPER_HOVER = 0.15
+# # The BOTTOM left corner of the paper is (0, 0)
+# # The TOP right corner of the paper is (CANVAS_WIDTH, CANVAS_HEIGHT)
+# x_min_draw = 0
+# x_max_draw = CANVAS_WIDTH
+# y_min_draw = 0
+# y_max_draw = CANVAS_HEIGHT
+# # Paper values:
+# PAPER_WIDTH = 0.29
+# PAPER_HEIGHT = 0.19
+# # The BOTTOM left corner of the paper w.r.t the robot's base frame.
+# LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
 
+from constants import (
+    PAPER_WIDTH,
+    PAPER_HEIGHT,
+    x_min_draw,
+    x_max_draw,
+    y_min_draw,
+    y_max_draw,
+    LEFT_PAPER_CORNER_ABS
+)
 
 def load_waypoints(robot_paper_width_x, robot_paper_height_y, filename="waypoints.txt"):
     """
@@ -117,22 +122,22 @@ def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
 
     return new_lines
 
-## Some basic test code
-if __name__ == "__main__":
-    # Example usage
-    x_min_robot = -0.2
-    x_max_robot = 0.2
-    y_min_robot = -0.2
-    y_max_robot = 0.2
+# ## Some basic test code
+# if __name__ == "__main__":
+#     # Example usage
+#     x_min_robot = -0.2
+#     x_max_robot = 0.2
+#     y_min_robot = -0.2
+#     y_max_robot = 0.2
 
-    waypoints = load_waypoints(
-        robot_paper_width_x=x_max_robot - x_min_robot,
-        robot_paper_height_y=y_max_robot - y_min_robot,
-        filename="waypoints.txt"
-    )
-    print(waypoints)
+#     waypoints = load_waypoints(
+#         robot_paper_width_x=x_max_robot - x_min_robot,
+#         robot_paper_height_y=y_max_robot - y_min_robot,
+#         filename="waypoints.txt"
+#     )
+#     print(waypoints)
 
-    # Convert to robot coordinates
-    robot_coords = convert_to_robot_coords(waypoints)
-    for segment in robot_coords:
-        print(f"Segment: {segment}")
+#     # Convert to robot coordinates
+#     robot_coords = convert_to_robot_coords(waypoints)
+#     for segment in robot_coords:
+#         print(f"Segment: {segment}")

@@ -9,26 +9,37 @@ from scale_points import load_waypoints, convert_to_robot_coords
 from move_to_waypoints import is_horizontal, compute_adjustments, is_vertical, compute_adjustments_z
 
 
-# CONSTANT DEFINITIONS:
-from scale_points import (
-    PAPER_WIDTH,
-    PAPER_HEIGHT,
-    # the bottom left corner of the paper and it's absolute position in the robot's coordinate frame (and it's origin)
-    LEFT_PAPER_CORNER_ABS,
-    # this is the wrong place for these constants, but makes import issues easier for now
+# # CONSTANT DEFINITIONS:
+# from scale_points import (
+#     PAPER_WIDTH,
+#     PAPER_HEIGHT,
+#     # the bottom left corner of the paper and it's absolute position in the robot's coordinate frame (and it's origin)
+#     LEFT_PAPER_CORNER_ABS,
+#     # this is the wrong place for these constants, but makes import issues easier for now
+#     PAPER_HOVER,
+#     PEN_DISPLACEMENT,
+# )
+# # The distance above the paper to hover before pusing the pen down
+# # PAPER_HOVER = 0.15
+# # Robot values:
+# GRIPPER_PRESSURE = 1.0
+# SLEEP_TIME = 3.0
+# TRAJECTORY_TIME = 1.2
+# ACCEL_TIME = TRAJECTORY_TIME/5
+# # Other:
+# # The z difference from the robot's end effector to the pen tip
+# # PEN_DISPLACEMENT = 0.015
+from constants import (
     PAPER_HOVER,
     PEN_DISPLACEMENT,
+    LEFT_PAPER_CORNER_ABS,
+    SLEEP_TIME,
+    TRAJECTORY_TIME,
+    ACCEL_TIME,
+    PAPER_HEIGHT,
+    PAPER_WIDTH,
+    GRIPPER_PRESSURE,
 )
-# The distance above the paper to hover before pusing the pen down
-# PAPER_HOVER = 0.15
-# Robot values:
-GRIPPER_PRESSURE = 1.0
-SLEEP_TIME = 3.0
-TRAJECTORY_TIME = 1.2
-ACCEL_TIME = TRAJECTORY_TIME/5
-# Other:
-# The z difference from the robot's end effector to the pen tip
-# PEN_DISPLACEMENT = 0.015
 
 
 
@@ -89,17 +100,8 @@ def draw_lines():
     time.sleep(SLEEP_TIME)
     bot.gripper.grasp()
 
-    # get a list of lines to draw, in absolute coordinates w.r.t to the robot's base frame
-    # each line is of the form [x0, y0, x1, y1] where the line starts at x0, y0, and ends at x1, y1
-
-    # NOTE: These points are in the PAPER'S coordinate frame where 
-    # x is the width of the paper and y is the height of the paper
-    lines = load_waypoints(
-        x_min_robot=LEFT_PAPER_CORNER_ABS[0],
-        x_max_robot=LEFT_PAPER_CORNER_ABS[0] + PAPER_HEIGHT,
-        y_min_robot=LEFT_PAPER_CORNER_ABS[1],
-        y_max_robot=LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH,
-    )
+    # get a list of lines to draw, in robot's scaled coordinates w.r.t to the corner of the paper
+    lines = load_waypoints(PAPER_WIDTH, PAPER_HEIGHT)
     print("Loaded lines to draw")
     # converts the lines into the robot's coordinate frame, where 
     # positive X goes away from the robot in a straight line, and
@@ -116,6 +118,7 @@ def draw_lines():
     
             - X
     """ 
+    # the final list of lines to draw, with respect to the base frame of the robot, scaled with the proper coords
     lines = convert_to_robot_coords(lines)
     print("Converted lines in paper's coordinate frame to the robot's coordinate frame")
 
