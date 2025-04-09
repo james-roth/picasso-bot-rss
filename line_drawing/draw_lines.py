@@ -5,31 +5,30 @@ from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
 # Others
 import numpy as np
 import time
-from scale_points import load_waypoints
+from scale_points import load_waypoints, convert_to_robot_coords
 from move_to_waypoints import is_horizontal, compute_adjustments, is_vertical, compute_adjustments_z
 
 
-
 # CONSTANT DEFINITIONS:
-
-# Paper values:
-PAPER_WIDTH = 0.29
-PAPER_HEIGHT = 0.19
-# The BOTTOM left corner of the paper w.r.t the robot's base frame.
-LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
-
+from scale_points import (
+    PAPER_WIDTH,
+    PAPER_HEIGHT,
+    # the bottom left corner of the paper and it's absolute position in the robot's coordinate frame (and it's origin)
+    LEFT_PAPER_CORNER_ABS,
+    # this is the wrong place for these constants, but makes import issues easier for now
+    PAPER_HOVER,
+    PEN_DISPLACEMENT,
+)
 # The distance above the paper to hover before pusing the pen down
-PAPER_HOVER = 0.15
-
+# PAPER_HOVER = 0.15
 # Robot values:
 GRIPPER_PRESSURE = 1.0
 SLEEP_TIME = 3.0
 TRAJECTORY_TIME = 1.2
 ACCEL_TIME = TRAJECTORY_TIME/5
-
 # Other:
 # The z difference from the robot's end effector to the pen tip
-PEN_DISPLACEMENT = 0.015
+# PEN_DISPLACEMENT = 0.015
 
 
 
@@ -68,22 +67,6 @@ def lift_pen(robot: InterbotixManipulatorXS) -> bool:
 
     return success
 
-def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
-    """
-    Converts coordinates for lines from the robot's "normal" x, y coordinate system
-    to the one used by the robot's drawing functions so that coordinates on the paper are drawn
-    in the correct orientation by the robot.
-
-    Currently, swaps the X and Y values as well.
-    """
-    # TODO: we could also (and maybe should) do this via a transfomation matrix? But I'm lazy
-    robot_coords_lines = []
-    for line in lines:
-        new_line = [line[1], line[0], line[3], line[2]]
-        robot_coords_lines.append(new_line)
-
-    return robot_coords_lines
-
 
 def draw_lines():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
@@ -119,21 +102,21 @@ def draw_lines():
     )
     print("Loaded lines to draw")
     # converts the lines into the robot's coordinate frame, where 
-    # negative X goes away from the robot in a straight line, and
+    # positive X goes away from the robot in a straight line, and
     # positive Y is to the left of the robot and negative Y is to the right of the robot
     """  
     In the ROBOT's coordinate frame:
 
-            - X
+            + X
             
       + Y   Paper  - Y
             here     
     
             ROBOT
     
-            + X
+            - X
     """ 
-    # lines = convert_to_robot_coords(lines)
+    lines = convert_to_robot_coords(lines)
     print("Converted lines in paper's coordinate frame to the robot's coordinate frame")
 
     # actually draw each line
