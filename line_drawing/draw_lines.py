@@ -79,6 +79,7 @@ def lift_pen(robot: InterbotixManipulatorXS) -> bool:
     return success
 
 
+# The main function
 def draw_lines():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
         robot_model='rx200',
@@ -101,11 +102,10 @@ def draw_lines():
     bot.gripper.grasp()
 
     # get a list of lines to draw, in robot's scaled coordinates w.r.t to the corner of the paper
-    lines = load_waypoints(PAPER_WIDTH, PAPER_HEIGHT)
+    # ie. the bottom left corner of the paper is (0, 0) and the top right is (+Width, +Height), but 
+    # in the scale of the coordinates passed to set_ee_pose_components()
+    lines = load_waypoints()
     print("Loaded lines to draw")
-    # converts the lines into the robot's coordinate frame, where 
-    # positive X goes away from the robot in a straight line, and
-    # positive Y is to the left of the robot and negative Y is to the right of the robot
     """  
     In the ROBOT's coordinate frame:
 
@@ -128,6 +128,11 @@ def draw_lines():
         start = np.array([line[0], line[1], LEFT_PAPER_CORNER_ABS[2]])
         end = np.array([line[2], line[3], LEFT_PAPER_CORNER_ABS[2]])
 
+        if (start[0] < end[0]):
+            start, end = end, start
+        x0, x1 = start[0], end[0]
+        y0, y1 = start[1], end[1]
+
         # move ABOVE the starting position
         paper_hover_dist = LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER
         print(f"Moving above the first point of the line at {start[0], start[1], paper_hover_dist}")
@@ -139,12 +144,9 @@ def draw_lines():
 
         # move to the end of the line
         if is_horizontal(start[1], end[1]):
-            x0, x1 = start[0], end[0]
-            y0, y1 = start[1], end[1]
-
             # do waypoints
             print("Found Horizontal Line")
-            num_waypoints = 20 #(min 2)amnt of waypoints we manually generate
+            num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
             x_points = np.linspace(x0, x1, num=num_waypoints)
             y_points = np.linspace(y0, y1, num=num_waypoints)
 

@@ -22,9 +22,37 @@ from constants import (
     LEFT_PAPER_CORNER_ABS
 )
 
-def load_waypoints(robot_paper_width_x, robot_paper_height_y, filename="waypoints.txt"):
+
+def scale_paper_points(lines):
     """
-    Loads waypoints from wwaypoints.txt and scales them to the robot's coordinate system.
+    A the workhorse method for load_waypoints, so this functionality can be avilable without changing existing code.
+    """
+    scaled_waypoints = []
+    for segment in lines:
+        x0, y0, x1, y1 = segment
+        assert x_min_draw <= x0 <= x_max_draw, f"Pre-scaled x0 {x0} is out of bounds"
+        assert y_min_draw <= y0 <= y_max_draw, f"Pre-scaled y0 {y0} is out of bounds"
+        assert x_min_draw <= x1 <= x_max_draw, f"Pre-scaled x1 {x1} is out of bounds"
+        assert y_min_draw <= y1 <= y_max_draw, f"Pre-scaled y1 {y1} is out of bounds"
+
+        # Scale the points to the robot's coordinate system
+        x0_scaled = (x0 - x_min_draw) / (x_max_draw - x_min_draw) * PAPER_WIDTH
+        y0_scaled = (y0 - y_min_draw) / (y_max_draw - y_min_draw) * PAPER_HEIGHT
+        x1_scaled = (x1 - x_min_draw) / (x_max_draw - x_min_draw) * PAPER_WIDTH
+        y1_scaled = (y1 - y_min_draw) / (y_max_draw - y_min_draw) * PAPER_HEIGHT
+
+        assert 0 <= x0_scaled <= PAPER_WIDTH, f"Scaled x0 {x0_scaled} is out of bounds"
+        assert 0 <= y0_scaled <= PAPER_HEIGHT, f"Scaled y0 {y0_scaled} is out of bounds"
+        assert 0 <= x1_scaled <= PAPER_WIDTH, f"Scaled x1 {x1_scaled} is out of bounds"
+        assert 0 <= y1_scaled <= PAPER_HEIGHT, f"Scaled y1 {y1_scaled} is out of bounds"
+
+        scaled_waypoints.append((x0_scaled, y0_scaled, x1_scaled, y1_scaled))
+
+    return scaled_waypoints
+
+def load_waypoints(filename="waypoints.txt"):
+    """
+    Loads waypoints from waypoints.txt and scales them to the robot's coordinate system.
     DOES NOT apply any translation or rotation to the points (to put them in a drawable coordinate system for the arm).
 
     Assumes the waypoints are in a coordinate system where the origin is at the bottom left corner of the canvas],
@@ -35,8 +63,8 @@ def load_waypoints(robot_paper_width_x, robot_paper_height_y, filename="waypoint
     filename: The name of the file containing the waypoints.
     """
 
-    assert robot_paper_width_x > 0, f"Width of paper in robot's coordinate system must be positive"
-    assert robot_paper_height_y > 0, f"Height of paper in robot's coordinate system must be positive"
+    assert PAPER_WIDTH > 0, f"Width of paper in robot's coordinate system must be positive"
+    assert PAPER_HEIGHT > 0, f"Height of paper in robot's coordinate system must be positive"
 
     # verify inputs are valid
     waypoints = []
@@ -48,26 +76,7 @@ def load_waypoints(robot_paper_width_x, robot_paper_height_y, filename="waypoint
                 x0, y0, x1, y1 = map(int, values)
                 waypoints.append((x0, y0, x1, y1))
 
-    scaled_waypoints = []
-    for segment in waypoints:
-        x0, y0, x1, y1 = segment
-        assert x_min_draw <= x0 <= x_max_draw, f"Pre-scaled x0 {x0} is out of bounds"
-        assert y_min_draw <= y0 <= y_max_draw, f"Pre-scaled y0 {y0} is out of bounds"
-        assert x_min_draw <= x1 <= x_max_draw, f"Pre-scaled x1 {x1} is out of bounds"
-        assert y_min_draw <= y1 <= y_max_draw, f"Pre-scaled y1 {y1} is out of bounds"
-
-        # Scale the points to the robot's coordinate system
-        x0_scaled = (x0 - x_min_draw) / (x_max_draw - x_min_draw) * robot_paper_width_x
-        y0_scaled = (y0 - y_min_draw) / (y_max_draw - y_min_draw) * robot_paper_height_y
-        x1_scaled = (x1 - x_min_draw) / (x_max_draw - x_min_draw) * robot_paper_width_x
-        y1_scaled = (y1 - y_min_draw) / (y_max_draw - y_min_draw) * robot_paper_height_y
-
-        assert 0 <= x0_scaled <= robot_paper_width_x, f"Scaled x0 {x0_scaled} is out of bounds"
-        assert 0 <= y0_scaled <= robot_paper_height_y, f"Scaled y0 {y0_scaled} is out of bounds"
-        assert 0 <= x1_scaled <= robot_paper_width_x, f"Scaled x1 {x1_scaled} is out of bounds"
-        assert 0 <= y1_scaled <= robot_paper_height_y, f"Scaled y1 {y1_scaled} is out of bounds"
-
-        scaled_waypoints.append((x0_scaled, y0_scaled, x1_scaled, y1_scaled))
+    scaled_waypoints = scale_paper_points(waypoints)
     return scaled_waypoints
 
 def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
@@ -95,30 +104,32 @@ def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
 
     0, 0                    WIDTH, 0
     """ 
-    assert PAPER_HEIGHT > 0, f"Height of paper in robot's coordinate system must be positive"
-    assert PAPER_WIDTH > 0, f"Width of paper in robot's coordinate system must be positive"
-
     new_lines = []
-    for point in lines:
+    for paper_point in lines:
         # for lines represented as 2 points like (x0, y0, x1, y1)
-        if len(point) == 4:
-            x0, y0, x1, y1 = point
-            new_point = [0, 0, 0, 0]
+        if len(paper_point) == 4:
+            # swap the points as the x axis of the robot is the y axis of the paper, and vice versa
+            # ie. (x, y) in paper coords = (y, x) in robot coords
+            y0, x0, y1, x1 = paper_point
 
-            # Convert to robot's coordinate frame
-            new_point[0] = LEFT_PAPER_CORNER_ABS[0] + ((x0 - LEFT_PAPER_CORNER_ABS[0]) * -PAPER_WIDTH)
-            new_point[1] = LEFT_PAPER_CORNER_ABS[1] - ((y0 - LEFT_PAPER_CORNER_ABS[1]) * PAPER_HEIGHT)
-            new_point[2] = LEFT_PAPER_CORNER_ABS[0] + ((x1 - LEFT_PAPER_CORNER_ABS[0]) * -PAPER_WIDTH)
-            new_point[3] = LEFT_PAPER_CORNER_ABS[1] - ((y1 - LEFT_PAPER_CORNER_ABS[1]) * PAPER_HEIGHT)
-            new_lines.append(new_point)
+            # Convert to robot's coordinate frame, POINTS ARE ALREADY SCALED TO ROBOT'S FRAME
+            x0 = LEFT_PAPER_CORNER_ABS[0] + x0
+            y0 = LEFT_PAPER_CORNER_ABS[1] - y0
+            x1 = LEFT_PAPER_CORNER_ABS[0] + x1
+            y1 = LEFT_PAPER_CORNER_ABS[1] - y1
+
+            new_lines.append([x0, y0, x1, y1])
         # for 2D points, we need to convert them to 3D points by adding the z coordinate
-        elif len(point) == 2:
-            x, y = point
-            new_point = [0, 0]
-            # Convert to robot's coordinate frame
-            new_point[0] = LEFT_PAPER_CORNER_ABS[0] + ((x - LEFT_PAPER_CORNER_ABS[0]) * -PAPER_WIDTH)
-            new_point[1] = LEFT_PAPER_CORNER_ABS[1] - ((y - LEFT_PAPER_CORNER_ABS[1]) * PAPER_HEIGHT)
-            new_lines.append(new_point)
+        elif len(paper_point) == 2:
+            # swap the points as the x axis of the robot is the y axis of the paper, and vice versa
+            # ie. (x, y) in paper coords = (y, x) in robot coords
+            y0, x0, y1, x1 = paper_point
+
+            # Convert to robot's coordinate frame, POINTS ARE ALREADY SCALED TO ROBOT'S FRAME
+            x0 = LEFT_PAPER_CORNER_ABS[0] + x0
+            y0 = LEFT_PAPER_CORNER_ABS[1] - y0
+
+            new_lines.append([x0, y0])
 
     return new_lines
 
