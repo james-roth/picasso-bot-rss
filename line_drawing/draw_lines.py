@@ -141,6 +141,11 @@ def draw_lines():
         # These lines are in the coordiante frame of the robot
         start = np.array([line[0], line[1], LEFT_PAPER_CORNER_ABS[2]])
         end = np.array([line[2], line[3], LEFT_PAPER_CORNER_ABS[2]])
+        
+        if (start[0] < end[0]):
+            start, end = end, start
+        x0, x1 = start[0], end[0]
+        y0, y1 = start[1], end[1]
 
         # move ABOVE the starting position
         paper_hover_dist = LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER
@@ -152,13 +157,10 @@ def draw_lines():
         actual_z = pen_to_paper(bot, LEFT_PAPER_CORNER_ABS)[1]
 
         # move to the end of the line
-        if is_horizontal(start[1], end[1]):
-            x0, x1 = start[0], end[0]
-            y0, y1 = start[1], end[1]
-
+        if is_horizontal(start[0], end[0]):
             # do waypoints
             print("Found Horizontal Line")
-            num_waypoints = 20 #(min 2)amnt of waypoints we manually generate
+            num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
             x_points = np.linspace(x0, x1, num=num_waypoints)
             y_points = np.linspace(y0, y1, num=num_waypoints)
 
@@ -168,7 +170,7 @@ def draw_lines():
                 print(f"Waypoint: {x + x_adjust, y, actual_z}")
                 if not bot.arm.set_ee_pose_components(
                         x=x + x_adjust, y=y, z=actual_z, 
-                        blocking=False, moving_time=TRAJECTORY_TIME/num_waypoints, accel_time=ACCEL_TIME, 
+                        blocking=False, moving_time=max(0.2, TRAJECTORY_TIME/num_waypoints), accel_time=ACCEL_TIME, 
                         custom_guess=bot.arm.get_joint_positions()
                     )[1]:
                     # if one waypoint fails, don't execute more
@@ -176,10 +178,10 @@ def draw_lines():
                     break
                 time.sleep(SLEEP_TIME/num_waypoints)
             print(f"Moved to end point: {x0, y0}")
-        elif is_vertical:
+        elif is_vertical(start[1], end[1]):
             z_adjust = compute_adjustments_z(end[0], x_min=LEFT_PAPER_CORNER_ABS[0] - PAPER_HEIGHT, x_max=LEFT_PAPER_CORNER_ABS[0])
             print("Found Vertical Line")
-            success = bot.arm.set_ee_pose_components(end[0], end[1], actual_z + z_adjust, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME)[1]
+            success = bot.arm.set_ee_pose_components(end[0], end[1], actual_z + z_adjust, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME, custom_guess=bot.arm.get_joint_positions())[1]
             if success:
                 time.sleep(SLEEP_TIME)       
         else:

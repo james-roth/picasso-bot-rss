@@ -76,7 +76,7 @@ def compute_adjustments_z(x, x_min, x_max):
     """
 
     # Scaling factor
-    k_z = 0.002
+    k_z = 0.009
 
     x_factor = (x - x_min) / (x_max - x_min)  # Maps x in [0.2, 0.35] to [0, 1]
 
