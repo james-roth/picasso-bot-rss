@@ -150,12 +150,14 @@ def draw_lines():
             x_points = np.linspace(x0, x1, num=num_waypoints)
             y_points = np.linspace(y0, y1, num=num_waypoints)
 
+            # For a horizontal line we only need to z-adjust once because the x coords are not changing
+            z_adjust = compute_adjustments_z(start[0], x_min=LEFT_PAPER_CORNER_ABS[0] - PAPER_HEIGHT, x_max=LEFT_PAPER_CORNER_ABS[0])
             # Interate through intermediate waypoints
             for x, y in zip(x_points[1:], y_points[1:]):
                 x_adjust = compute_adjustments(y, y_max=LEFT_PAPER_CORNER_ABS[1], y_min=LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH)
-                print(f"Waypoint: {x + x_adjust, y, actual_z}")
+                print(f"Waypoint: {x + x_adjust, y, actual_z + z_adjust}")
                 if not bot.arm.set_ee_pose_components(
-                        x=x + x_adjust, y=y, z=actual_z, 
+                        x=x + x_adjust, y=y, z=actual_z + z_adjust, 
                         blocking=False, moving_time=TRAJECTORY_TIME/num_waypoints, accel_time=ACCEL_TIME, 
                         custom_guess=bot.arm.get_joint_positions()
                     )[1]:
