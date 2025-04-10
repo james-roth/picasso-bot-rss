@@ -11,6 +11,7 @@ y_min_draw = 0
 y_max_draw = CANVAS_HEIGHT
 
 ### PHYSICAL PAPER VALUES:
+# PEN_DISPLACEMENT = 0.015
 PEN_DISPLACEMENT = 0.015
 # ensure the pen is always a certain distance above the paper
 PAPER_HOVER = round(0.135 + PEN_DISPLACEMENT, 4)
