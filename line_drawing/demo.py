@@ -7,11 +7,17 @@ import subprocess
 import sys
 
 def run_script(script_name):
-    #exit current and run selected script
+    #try and run the display script
     try:
         subprocess.run([sys.executable, script_name], check=True)
     except subprocess.CalledProcessError as e:
         messagebox.showerror("Error", f"Failed to run {script_name}.\n{e}")
+
+    #after that, run the movement script
+    try:
+        subprocess.run([sys.executable, "draw_lines_simple.py"], check=True)
+    except subprocess.CalledProcessError as e:
+        messagebox.showerror("Error", f"Failed to run draw_lines_simple.py.\n{e}")
     sys.exit()
 
 def main():
