@@ -5,7 +5,7 @@ from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
 # Others
 import numpy as np
 import time
-from scale_points import load_waypoints, convert_to_robot_coords
+from scale_points import load_waypoints, convert_to_robot_coords, increase_motor_accuracies
 from move_to_waypoints import is_horizontal, compute_adjustments, is_vertical, compute_adjustments_z
 
 from constants import (
@@ -66,6 +66,9 @@ def draw_lines_simple():
     
     # init the robot, set some values
     robot_startup()
+    
+    increase_motor_accuracies(bot)
+    
     bot.arm.set_trajectory_time(TRAJECTORY_TIME)
     bot.gripper.set_pressure(GRIPPER_PRESSURE)
     
@@ -107,7 +110,7 @@ def draw_lines_simple():
 
         if (start[0] < end[0]):
             start, end = end, start
-            
+
         # move ABOVE the starting position
         paper_hover_dist = LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER
         print(f"Moving above the first point of the line at {start[0], start[1], paper_hover_dist}")

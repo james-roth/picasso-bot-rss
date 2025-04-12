@@ -22,10 +22,8 @@ def increase_motor_accuracies(bot: InterbotixManipulatorXS):
     bot.arm.go_to_sleep_pose()
     print(f"WARNING: Setting torque off in {SLEEP_TIME} seconds. Ensure arm is in a safe position")
     time.sleep(SLEEP_TIME)
-    
-    # motors can only be updated when torque is off
-    bot.core.robot_torque_enable(cmd_type="group", name="all", enable=False)
 
+    torque = False
     # update register values for each motor
     for joint in bot.arm.group_info.joint_names:
         # read the old value
@@ -36,6 +34,11 @@ def increase_motor_accuracies(bot: InterbotixManipulatorXS):
         )[0]
 
         if old_p_gain <= JOINT_DEFAULTS[joint]:
+            if not torque:
+                torque = True
+                # motors can only be updated when torque is off
+                bot.core.robot_torque_enable(cmd_type="group", name="all", enable=False)
+
             new_p_gain = int(old_p_gain + REG_DELTA)
             assert 600 <= new_p_gain <= 1250, f"New position_p_gain value is outside of recommended limits."
             print(f"Updating joint motor position_p_gain register {joint} to {new_p_gain}.")
