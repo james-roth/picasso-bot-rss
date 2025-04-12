@@ -8,27 +8,6 @@ import time
 from scale_points import load_waypoints, convert_to_robot_coords
 from move_to_waypoints import is_horizontal, compute_adjustments, is_vertical, compute_adjustments_z
 
-
-# # CONSTANT DEFINITIONS:
-# from scale_points import (
-#     PAPER_WIDTH,
-#     PAPER_HEIGHT,
-#     # the bottom left corner of the paper and it's absolute position in the robot's coordinate frame (and it's origin)
-#     LEFT_PAPER_CORNER_ABS,
-#     # this is the wrong place for these constants, but makes import issues easier for now
-#     PAPER_HOVER,
-#     PEN_DISPLACEMENT,
-# )
-# # The distance above the paper to hover before pusing the pen down
-# # PAPER_HOVER = 0.15
-# # Robot values:
-# GRIPPER_PRESSURE = 1.0
-# SLEEP_TIME = 3.0
-# TRAJECTORY_TIME = 1.2
-# ACCEL_TIME = TRAJECTORY_TIME/5
-# # Other:
-# # The z difference from the robot's end effector to the pen tip
-# # PEN_DISPLACEMENT = 0.015
 from constants import (
     PAPER_HOVER,
     PEN_DISPLACEMENT,
@@ -40,8 +19,6 @@ from constants import (
     PAPER_WIDTH,
     GRIPPER_PRESSURE,
 )
-
-
 
 # HELPER FUNCS:
 def get_eff_coords(robot: InterbotixManipulatorXS) -> np.ndarray:

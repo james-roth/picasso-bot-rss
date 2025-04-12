@@ -35,7 +35,7 @@ def increase_motor_accuracies(bot: InterbotixManipulatorXS):
             reg='Position_P_Gain'
         )[0]
 
-        if JOINT_DEFAULTS[joint] < old_p_gain:
+        if old_p_gain <= JOINT_DEFAULTS[joint]:
             new_p_gain = int(old_p_gain + REG_DELTA)
             assert 600 <= new_p_gain <= 1250, f"New position_p_gain value is outside of recommended limits."
             print(f"Updating joint motor position_p_gain register {joint} to {new_p_gain}.")
