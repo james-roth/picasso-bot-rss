@@ -169,23 +169,3 @@ def convert_to_robot_coords(lines: list[list[float]]) -> list[list[float]]:
             new_lines.append([round(x0, 2), round(y0, 2)])
 
     return new_lines
-
-# ## Some basic test code
-# if __name__ == "__main__":
-#     # Example usage
-#     x_min_robot = -0.2
-#     x_max_robot = 0.2
-#     y_min_robot = -0.2
-#     y_max_robot = 0.2
-
-#     waypoints = load_waypoints(
-#         robot_paper_width_x=x_max_robot - x_min_robot,
-#         robot_paper_height_y=y_max_robot - y_min_robot,
-#         filename="waypoints.txt"
-#     )
-#     print(waypoints)
-
-#     # Convert to robot coordinates
-#     robot_coords = convert_to_robot_coords(waypoints)
-#     for segment in robot_coords:
-#         print(f"Segment: {segment}")

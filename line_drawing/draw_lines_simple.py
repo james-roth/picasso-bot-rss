@@ -6,7 +6,6 @@ from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
 import numpy as np
 import time
 from scale_points import load_waypoints, convert_to_robot_coords, increase_motor_accuracies
-from move_to_waypoints import is_horizontal, compute_adjustments, is_vertical, compute_adjustments_z
 
 from constants import (
     PAPER_HOVER,

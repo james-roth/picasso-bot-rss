@@ -7,37 +7,6 @@ import numpy as np
 from scale_points import load_waypoints
 
 
-# def move(absolute=False, **kwargs):
-#     """
-#     Move the end-effector using either relative Cartesian trajectory or absolute pose components.
-
-#     Args:
-#         absolute (bool): If True, use absolute pose via set_ee_pose_components.
-#                         If False (default), use relative motion via set_ee_cartesian_trajectory.
-#         **kwargs: x, y, z, roll, pitch, yaw (any subset, depending on function used).
-#     """
-#     if absolute:
-#         success = bot.arm.set_ee_pose_components(**kwargs)
-#     else:
-#         #doing this to the trajectory as we only want a singular waypoint (strict path planning)
-#         move_time=1.0 #seconds
-#         success = bot.arm.set_ee_cartesian_trajectory(moving_time=move_time,
-#             wp_moving_time=move_time,
-#             wp_accel_time=(move_time/2),
-#             wp_period=move_time,
-#             **kwargs)
-
-#     if success:
-#         method = "absolute pose" if absolute else "relative trajectory"
-#         desc = ", ".join([f"{k}={v}" for k, v in kwargs.items()])
-#         # print(f"Moved using {method}: {desc}")
-#     else:
-#         print(f"Failed to move with args: {kwargs}")
-
-#     time.sleep(sleep_time)
-#     print("Sleep done")
-
-
 def compute_adjustments(y, y_min, y_max):
     """
     Compute the x adjustments based on the position in the xy-plane. Smoothing based on
@@ -113,45 +82,3 @@ def is_vertical(y0, y1):
     True if vertical otherwise False
     """
     return abs(y1 - y0) < 0.03  
-
-# # starts up the robot, leave 
-# bot.gripper.set_pressure(2.0)
-# robot_startup()
-
-# # some sample moving code
-# bot.arm.go_to_home_pose()
-# time.sleep(2)
-# print("At home pose")
-
-# bot.gripper.release()
-# print('Put marker in the gripper')
-# time.sleep(4)
-# bot.gripper.grasp()
-# time.sleep(2)
-
-# waypoints = load_waypoints()
-# print(waypoints)
-# z_const = 0.1
-
-# for segment in waypoints:
-#     x0, y0, x1, y1 = segment
-#     # Move to initial point on the line
-#     move(x=x1, z=z_const, y=y1, blocking=False, absolute=True)
-#     print(f"Moved to initial point: {x1, y1}")
-
-#     if is_horizontal(x0, x1):
-#         print("Found Horizontal Line")
-#         num_waypoints = 5 #(min 2)amnt of waypoints we manually generate
-#         x_points = np.linspace(x0, x1, num=num_waypoints)
-#         y_points = np.linspace(y0, y1, num=num_waypoints)
-
-#         # Interate through intermediate waypoints
-#         for x, y in zip(x_points[num_waypoints - 1::-1], y_points[num_waypoints - 1::-1]):
-#             x_adjust = compute_adjustments(x, y)
-#             print(f"Waypoint: {x+x_adjust,y, z_const}")
-#             move(x=x + x_adjust, z=z_const, y=y, blocking=False, absolute=True)
-#         print(f"Moved to end point: {x0, y0}")
-#     else:
-#         # TODO: Add the code for a normal move between points
-#         move(x=x0, z=z_const, y=y1, blocking=False, absolute=True)
-

@@ -11,9 +11,6 @@ from constants import (
     PEN_DISPLACEMENT,
     LEFT_PAPER_CORNER_ABS,
     CALIBRATION_SLEEP_TIME,
-    SLEEP_TIME,
-    REG_DELTA,
-    JOINT_DEFAULTS
 )
 
 bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
@@ -26,14 +23,12 @@ bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
 robot_startup()
 
 increase_motor_accuracies(bot)
-
 bot.arm.set_trajectory_time(1.5)
 
 # go to the default home pose
 bot.arm.go_to_home_pose()
 time.sleep(CALIBRATION_SLEEP_TIME)
 
-# PAPER_HOVER = LEFT_PAPER_CORNER_ABS[2] + PEN_DISPLACEMENT
 
 paper_coords = [
     [0, 0, PAPER_HOVER],

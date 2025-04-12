@@ -25,7 +25,7 @@ def main():
     
     root = tk.Tk()
     root.title("Select Mode")
-    root.geometry("300x150")
+    root.geometry("450x250")
 
     label = tk.Label(root, text="Choose an option:", font=("Arial", 14))
     label.pack(pady=20)
