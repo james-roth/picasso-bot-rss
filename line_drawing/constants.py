@@ -14,7 +14,7 @@ y_max_draw = CANVAS_HEIGHT
 # PEN_DISPLACEMENT = 0.015
 PEN_DISPLACEMENT = 0.05
 # ensure the pen is always a certain distance above the paper
-PAPER_HOVER = round(0.135 + PEN_DISPLACEMENT, 4)
+PAPER_HOVER = round(0.11 + PEN_DISPLACEMENT, 4)
 # The BOTTOM left corner of the paper w.r.t the robot's base frame.
 LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.12, 0.05])
 # Y Coord of the robot frame
@@ -28,7 +28,7 @@ PEN_MOVEMENT_THRESHOLD = 0.05
 # Robot arm values:
 GRIPPER_PRESSURE = 1.0
 TRAJECTORY_TIME = 1
-ACCEL_TIME = TRAJECTORY_TIME/4
+ACCEL_TIME = TRAJECTORY_TIME/5
 SLEEP_TIME = 2.5
 # for calibration only
 CALIBRATION_SLEEP_TIME = 4.0
