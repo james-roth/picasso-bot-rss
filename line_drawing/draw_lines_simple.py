@@ -5,7 +5,7 @@ from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
 # Others
 import numpy as np
 import time
-from scale_points import load_waypoints, convert_to_robot_coords
+from scale_points import load_waypoints, convert_to_robot_coords, increase_motor_accuracies
 from move_to_waypoints import is_horizontal, compute_adjustments, is_vertical, compute_adjustments_z
 
 from constants import (
@@ -15,8 +15,7 @@ from constants import (
     SLEEP_TIME,
     TRAJECTORY_TIME,
     ACCEL_TIME,
-    PAPER_HEIGHT,
-    PAPER_WIDTH,
+    PEN_MOVEMENT_THRESHOLD,
     GRIPPER_PRESSURE,
 )
 
@@ -55,9 +54,15 @@ def lift_pen(robot: InterbotixManipulatorXS) -> bool:
 
     return success
 
+def next_line_under_threshold(cur_line_end, next_line_start) -> bool:
+    """
+    Is the start of the next line the robot has to draw close to the endpoint of the current line?
+    """
+    return np.linalg.norm(cur_line_end - next_line_start) <= PEN_MOVEMENT_THRESHOLD
+
 
 # The main function
-def draw_lines():
+def draw_lines_simple():
     bot: InterbotixManipulatorXS = InterbotixManipulatorXS(
         robot_model='rx200',
         group_name='arm',
@@ -66,6 +71,10 @@ def draw_lines():
     
     # init the robot, set some values
     robot_startup()
+    
+    # attempt to increase a motor register controlling how accurate the motors are
+    increase_motor_accuracies(bot)
+    
     bot.arm.set_trajectory_time(TRAJECTORY_TIME)
     bot.gripper.set_pressure(GRIPPER_PRESSURE)
     
@@ -100,68 +109,42 @@ def draw_lines():
     print("Converted lines in paper's coordinate frame to the robot's coordinate frame")
 
     # actually draw each line
-    for line in lines:
+    lifting_pen = True
+    for i in range(0, len(lines)):
+        line = lines[i]
+
         # These lines are in the coordiante frame of the robot
         start = np.array([line[0], line[1], LEFT_PAPER_CORNER_ABS[2]])
         end = np.array([line[2], line[3], LEFT_PAPER_CORNER_ABS[2]])
 
-        if (start[0] < end[0]):
-            start, end = end, start
-        x0, x1 = start[0], end[0]
-        y0, y1 = start[1], end[1]
-
         # move ABOVE the starting position
-        paper_hover_dist = LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER
-        print(f"Moving above the first point of the line at {start[0], start[1], paper_hover_dist}")
-        bot.arm.set_ee_pose_components(start[0], start[1], paper_hover_dist, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME)
-        time.sleep(SLEEP_TIME)
+        if lifting_pen:
+            paper_hover_dist = LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER
+            print(f"Moving above the first point of the line at {start[0], start[1], paper_hover_dist}")
+            bot.arm.set_ee_pose_components(start[0], start[1], paper_hover_dist, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME)
+            time.sleep(SLEEP_TIME)
 
-        # put the writing implement in contact with the paper, get the actual z location of the pen when it touches the paper
-        actual_z = pen_to_paper(bot, LEFT_PAPER_CORNER_ABS)[1]
-
-        # move to the end of the line
-        if is_horizontal(start[0], end[0]):
-            # do waypoints
-            print("Found Horizontal Line")
-            num_waypoints = 10 #(min 2)amnt of waypoints we manually generate
-            x_points = np.linspace(x0, x1, num=num_waypoints)
-            y_points = np.linspace(y0, y1, num=num_waypoints)
-
-            # For a horizontal line we only need to z-adjust once because the x coords are not changing
-            z_adjust = compute_adjustments_z(start[0], x_min=LEFT_PAPER_CORNER_ABS[0] - PAPER_HEIGHT, x_max=LEFT_PAPER_CORNER_ABS[0])
-            # Interate through intermediate waypoints
-            for x, y in zip(x_points[1:], y_points[1:]):
-                x_adjust = compute_adjustments(y, y_max=LEFT_PAPER_CORNER_ABS[1], y_min=LEFT_PAPER_CORNER_ABS[1] - PAPER_WIDTH)
-                print(f"Waypoint: {x + x_adjust, y, actual_z + z_adjust}")
-                if not bot.arm.set_ee_pose_components(
-                        x=x + x_adjust, y=y, z=actual_z + z_adjust, 
-                        blocking=False, moving_time=TRAJECTORY_TIME/num_waypoints, accel_time=ACCEL_TIME, 
-                        custom_guess=bot.arm.get_joint_positions()
-                    )[1]:
-                    # if one waypoint fails, don't execute more
-                    print(f"Waypoint {list(x_points).index(x) - 1} failed, skipping rest")
-                    break
-                time.sleep(SLEEP_TIME/num_waypoints)
-            print(f"Moved to end point: {x0, y0}")
-        elif is_vertical:
-            z_adjust = compute_adjustments_z(end[0], x_min=LEFT_PAPER_CORNER_ABS[0] - PAPER_HEIGHT, x_max=LEFT_PAPER_CORNER_ABS[0])
-            print("Found Vertical Line")
-            success = bot.arm.set_ee_pose_components(end[0], end[1], actual_z + z_adjust, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME)[1]
-            if success:
-                time.sleep(SLEEP_TIME)       
+            # put the writing implement in contact with the paper, get the actual z location of the pen when it touches the paper
+            actual_z = pen_to_paper(bot, LEFT_PAPER_CORNER_ABS)[1]
         else:
-            # move to the second point on the line
-            print(f"Moving to the second point on the line: {end[0], end[1], actual_z}")
-            success = bot.arm.set_ee_pose_components(
-                    x=end[0], y=end[1], z=actual_z, 
-                    moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME,
-                    custom_guess=bot.arm.get_joint_positions()
-                )[1]
-            if success:
-                time.sleep(SLEEP_TIME)
+            actual_z = LEFT_PAPER_CORNER_ABS[2] + PEN_DISPLACEMENT
+
+        print(f"Moving to the second point on the line: {end[0], end[1], actual_z}")
+        success = bot.arm.set_ee_pose_components(
+                x=end[0], y=end[1], z=actual_z, 
+                moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME,
+                custom_guess=bot.arm.get_joint_positions()
+            )[1]
+        if success:
+            time.sleep(SLEEP_TIME)
     
         # pick the pen back up to get ready for the next drawing
-        lift_pen(bot)
+        if i != len(lines) - 1:
+            lifting_pen = not next_line_under_threshold(end[:2], lines[i+1][:2])
+        if lifting_pen:
+            lift_pen(bot)
+        else:
+            print("Next line is close enough to current, not lifitng pen")
 
     # clean up after drawing lines
     bot.arm.set_trajectory_time(TRAJECTORY_TIME)
@@ -175,4 +158,4 @@ def draw_lines():
     robot_shutdown()
 
 if __name__ == "__main__":
-    draw_lines()
+    draw_lines_simple()
