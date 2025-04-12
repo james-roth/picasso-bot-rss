@@ -7,11 +7,12 @@ import subprocess
 import sys
 
 def run_script(script_name):
-    #try and run the display script
-    try:
-        subprocess.run([sys.executable, script_name], check=True)
-    except subprocess.CalledProcessError as e:
-        messagebox.showerror("Error", f"Failed to run {script_name}.\n{e}")
+    if not script_name == "":
+        #try and run the display script
+        try:
+            subprocess.run([sys.executable, script_name], check=True)
+        except subprocess.CalledProcessError as e:
+            messagebox.showerror("Error", f"Failed to run {script_name}.\n{e}")
 
     #after that, run the movement script
     try:
@@ -30,6 +31,7 @@ def main():
     label = tk.Label(root, text="Choose an option:", font=("Arial", 14))
     label.pack(pady=20)
 
+
     #button for "Manual Draw"
     manual_button = tk.Button(
         root, text="Manual Draw", font=("Arial", 12), command=lambda: run_script("straight_line.py")
@@ -41,6 +43,12 @@ def main():
         root, text="Image Demo", font=("Arial", 12), command=lambda: run_script("image_input.py")
     )
     image_button.pack(pady=5)
+
+    #button for "Manual Draw"
+    waypoints_button = tk.Button(
+        root, text="Use waypoints.txt", font=("Arial", 12), command=lambda: run_script("")
+    )
+    waypoints_button.pack(pady=5)
 
     root.mainloop()
 
