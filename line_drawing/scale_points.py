@@ -1,16 +1,7 @@
 import numpy as np
-
-# # The BOTTOM left corner of the paper is (0, 0)
-# # The TOP right corner of the paper is (CANVAS_WIDTH, CANVAS_HEIGHT)
-# x_min_draw = 0
-# x_max_draw = CANVAS_WIDTH
-# y_min_draw = 0
-# y_max_draw = CANVAS_HEIGHT
-# # Paper values:
-# PAPER_WIDTH = 0.29
-# PAPER_HEIGHT = 0.19
-# # The BOTTOM left corner of the paper w.r.t the robot's base frame.
-# LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.14, 0.05])
+from interbotix_common_modules.common_robot.robot import robot_shutdown, robot_startup
+from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
+import time
 
 from constants import (
     PAPER_WIDTH,
@@ -19,9 +10,50 @@ from constants import (
     x_max_draw,
     y_min_draw,
     y_max_draw,
-    LEFT_PAPER_CORNER_ABS
+    LEFT_PAPER_CORNER_ABS,
+    SLEEP_TIME,
+    REG_DELTA,
+    JOINT_DEFAULTS
 )
 
+def increase_motor_accuracies(bot: InterbotixManipulatorXS):
+    # ensure the bot is in a safe pose to torque off
+    print("Preparing to write to motor registers")
+    bot.arm.go_to_sleep_pose()
+    print(f"WARNING: Setting torque off in {SLEEP_TIME} seconds. Ensure arm is in a safe position")
+    time.sleep(SLEEP_TIME)
+    
+    # motors can only be updated when torque is off
+    bot.core.robot_torque_enable(cmd_type="group", name="all", enable=False)
+
+    # update register values for each motor
+    for joint in bot.arm.group_info.joint_names:
+        # read the old value
+        old_p_gain =  bot.core.robot_get_motor_registers(
+            cmd_type='single',
+            name=joint,
+            reg='Position_P_Gain'
+        )[0]
+
+        if JOINT_DEFAULTS[joint] < old_p_gain:
+            new_p_gain = int(old_p_gain + REG_DELTA)
+            assert 600 <= new_p_gain <= 1250, f"New position_p_gain value is outside of recommended limits."
+            print(f"Updating joint motor position_p_gain register {joint} to {new_p_gain}.")
+
+            # write the new value to the motor register
+            bot.core.robot_set_motor_pid_gains(
+                cmd_type='single',
+                name=joint,
+                kp_pos=new_p_gain,
+            )
+        else:
+            print(f"position_p_gain register value ({old_p_gain}) already beyond default of {JOINT_DEFAULTS[joint]}, skipping.")
+
+    # re-torque the arm
+    print("Enabling torque for robot arm")
+    bot.core.robot_torque_enable(cmd_type="group", name="all", enable=True)
+    time.sleep(1)
+    
 
 def scale_paper_points(lines):
     """
