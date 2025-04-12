@@ -10,7 +10,6 @@ x_max_draw = CANVAS_WIDTH
 y_min_draw = 0
 y_max_draw = CANVAS_HEIGHT
 
-
 ### PHYSICAL PAPER VALUES:
 # PEN_DISPLACEMENT = 0.015
 PEN_DISPLACEMENT = 0.05
@@ -22,16 +21,19 @@ LEFT_PAPER_CORNER_ABS = np.array([0.25, 0.12, 0.05])
 PAPER_WIDTH = 0.24
 # X Coord of the robot frame
 PAPER_HEIGHT = 0.18
+# the eucliden distance that the pen should not be picked up if the next point is close enoughhhhhh to
+PEN_MOVEMENT_THRESHOLD = 0.05
 
 ### ROBOT VALUES:
 # Robot arm values:
 GRIPPER_PRESSURE = 1.0
-TRAJECTORY_TIME = 1.2
-ACCEL_TIME = TRAJECTORY_TIME/5
-SLEEP_TIME = 3.0
+TRAJECTORY_TIME = 1
+ACCEL_TIME = TRAJECTORY_TIME/4
+SLEEP_TIME = 2.5
 # for calibration only
 CALIBRATION_SLEEP_TIME = 4.0
 
-REG_DELTA = 250
-
+# how much to up the position_p_gain register to increase the motor's accuracy
+REG_DELTA = 350
+# the default values of the position_p_gain registers, mapped to each joint's name
 JOINT_DEFAULTS = {'waist': 640, 'shoulder': 800, 'elbow': 800, 'wrist_angle': 640, 'wrist_rotate': 640}

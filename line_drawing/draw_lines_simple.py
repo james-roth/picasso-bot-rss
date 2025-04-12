@@ -15,8 +15,7 @@ from constants import (
     SLEEP_TIME,
     TRAJECTORY_TIME,
     ACCEL_TIME,
-    PAPER_HEIGHT,
-    PAPER_WIDTH,
+    PEN_MOVEMENT_THRESHOLD,
     GRIPPER_PRESSURE,
 )
 
@@ -55,6 +54,12 @@ def lift_pen(robot: InterbotixManipulatorXS) -> bool:
 
     return success
 
+def next_line_under_threshold(cur_line_end, next_line_start) -> bool:
+    """
+    Is the start of the next line the robot has to draw close to the endpoint of the current line?
+    """
+    return np.linalg.norm(cur_line_end - next_line_start) <= PEN_MOVEMENT_THRESHOLD
+
 
 # The main function
 def draw_lines_simple():
@@ -67,6 +72,7 @@ def draw_lines_simple():
     # init the robot, set some values
     robot_startup()
     
+    # attempt to increase a motor register controlling how accurate the motors are
     increase_motor_accuracies(bot)
     
     bot.arm.set_trajectory_time(TRAJECTORY_TIME)
@@ -103,22 +109,25 @@ def draw_lines_simple():
     print("Converted lines in paper's coordinate frame to the robot's coordinate frame")
 
     # actually draw each line
-    for line in lines:
+    lifting_pen = True
+    for i in range(0, len(lines)):
+        line = lines[i]
+
         # These lines are in the coordiante frame of the robot
         start = np.array([line[0], line[1], LEFT_PAPER_CORNER_ABS[2]])
         end = np.array([line[2], line[3], LEFT_PAPER_CORNER_ABS[2]])
 
-        if (start[0] < end[0]):
-            start, end = end, start
-
         # move ABOVE the starting position
-        paper_hover_dist = LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER
-        print(f"Moving above the first point of the line at {start[0], start[1], paper_hover_dist}")
-        bot.arm.set_ee_pose_components(start[0], start[1], paper_hover_dist, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME)
-        time.sleep(SLEEP_TIME)
+        if lifting_pen:
+            paper_hover_dist = LEFT_PAPER_CORNER_ABS[2] + PAPER_HOVER
+            print(f"Moving above the first point of the line at {start[0], start[1], paper_hover_dist}")
+            bot.arm.set_ee_pose_components(start[0], start[1], paper_hover_dist, moving_time=TRAJECTORY_TIME, accel_time=ACCEL_TIME)
+            time.sleep(SLEEP_TIME)
 
-        # put the writing implement in contact with the paper, get the actual z location of the pen when it touches the paper
-        actual_z = pen_to_paper(bot, LEFT_PAPER_CORNER_ABS)[1]
+            # put the writing implement in contact with the paper, get the actual z location of the pen when it touches the paper
+            actual_z = pen_to_paper(bot, LEFT_PAPER_CORNER_ABS)[1]
+        else:
+            actual_z = LEFT_PAPER_CORNER_ABS[2] + PEN_DISPLACEMENT
 
         print(f"Moving to the second point on the line: {end[0], end[1], actual_z}")
         success = bot.arm.set_ee_pose_components(
@@ -130,7 +139,12 @@ def draw_lines_simple():
             time.sleep(SLEEP_TIME)
     
         # pick the pen back up to get ready for the next drawing
-        lift_pen(bot)
+        if i != len(lines) - 1:
+            lifting_pen = not next_line_under_threshold(end[:2], lines[i+1][:2])
+        if lifting_pen:
+            lift_pen(bot)
+        else:
+            print("Next line is close enough to current, not lifitng pen")
 
     # clean up after drawing lines
     bot.arm.set_trajectory_time(TRAJECTORY_TIME)

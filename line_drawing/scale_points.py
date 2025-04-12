@@ -18,10 +18,7 @@ from constants import (
 
 def increase_motor_accuracies(bot: InterbotixManipulatorXS):
     # ensure the bot is in a safe pose to torque off
-    print("Preparing to write to motor registers")
-    bot.arm.go_to_sleep_pose()
-    print(f"WARNING: Setting torque off in {SLEEP_TIME} seconds. Ensure arm is in a safe position")
-    time.sleep(SLEEP_TIME)
+    print("Checking values of motor 'accuracy' registers to attempt updates.")
 
     torque = False
     # update register values for each motor
@@ -36,6 +33,11 @@ def increase_motor_accuracies(bot: InterbotixManipulatorXS):
         if old_p_gain <= JOINT_DEFAULTS[joint]:
             if not torque:
                 torque = True
+
+                print("Preparing to write to motor registers")
+                bot.arm.go_to_sleep_pose()
+                print(f"WARNING: Setting torque off in {SLEEP_TIME} seconds. Ensure arm is in a safe position")
+                time.sleep(SLEEP_TIME)
                 # motors can only be updated when torque is off
                 bot.core.robot_torque_enable(cmd_type="group", name="all", enable=False)
 
